@@ -239,6 +239,24 @@ body {
     background: transparent;
 }
 
+.card-gallery-name {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    font-family: var(--font-sans);
+    font-size: clamp(18px, 5vw, 28px);
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #fff;
+    text-align: center;
+    padding: 0 20px;
+}
+
 .card-demo-overlay__hint {
     margin: 0;
     font-size: 20px;

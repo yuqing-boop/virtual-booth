@@ -740,6 +740,7 @@ function setupCardDemoOverlay() {
             <div class="card-demo-overlay__stage">
                 <img class="card-demo-overlay__flower" src="/card-flower.svg" alt="" width="200" height="200" />
                 <canvas id="card-drip-canvas" width="400" height="400" aria-label="Paint on card"></canvas>
+                <div class="card-gallery-name">YOUR GALLERY NAME</div>
             </div>
             <p class="card-demo-overlay__hint">Choose the colors you like and drip them onto the card to reveal magical reading result.</p>
             <div id="card-ink-ui"></div>
