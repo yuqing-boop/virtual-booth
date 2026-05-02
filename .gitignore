@@ -23,3 +23,6 @@ Thumbs.db
 *.ntvs*
 *.njsproj
 *.sln
+
+# Stray nested project folder
+virtual booth/
