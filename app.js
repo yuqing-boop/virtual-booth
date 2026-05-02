@@ -42,8 +42,20 @@ const LOOK_TABLE = new THREE.Vector3(1.0, COLLAB_TABLE_CLOTH_H - 0.02, 2.5);
 const DEMO_URL = "https://aff-demo-oracle.vercel.app/";
 /** Static preview on 3D tablets — `public/oracle-thumbnail.png`. */
 const TABLET_THUMB_SRC = '/oracle-thumbnail.png';
+/** Approx total height of `.tv-qr-wrap` in px (520 image + gap + two caption lines); used to stack wall badges above QR planes. */
+const TV_QR_WRAP_LAYOUT_H_PX = 520 + 18 + 110;
 
 const INK_SWATCHES = ['#CE0058', '#DBE825', '#68D2AD', '#516B38', '#B869D8'];
+/** 5×20 ink tiles on the left wall (100 patches). Must match the `setupBooth` loop that builds them. */
+const INK_PATCH_WALL = {
+    cols: 20,
+    rows: 5,
+    x: -BOOTH_WIDTH / 2 + 0.28,
+    y0: 2.4,
+    z0: -5,
+    pitchY: 0.5,
+    pitchZ: 0.5,
+};
 
 const CARD_DRIP_VERTEX_N = 36;
 const CARD_DRIP_GROW_DECAY_DEFAULT = 0.988;
@@ -103,6 +115,10 @@ function qrCaptionInnerHTML() {
 // --- State ---
 let scene, camera, renderer, cssRenderer, controls, raycaster, mouse;
 let tabletA, tabletB, wallLogo, tvScreen, tvQrCode, tabletBQr;
+let qrWallBadgeTv, qrWallBadgeBack;
+let tabletIndicator;
+let tabletIndicator2;
+let tabletIndicator3;
 /** 'booth' | 'tablet' | 'card' | 'qr' */
 let viewMode = 'booth';
 let cardOverlayEl;
@@ -116,6 +132,22 @@ let cardClipViewBox = { x: 0, y: 0, w: 248.83, h: 257.28 };
 /** Fixed 2D panel with iframe — reliable interaction vs CSS3D iframe in-scene */
 let demoOverlayEl;
 let demoOverlayIframe;
+
+function setupTabletIndicatorAnim() {
+    for (const ind of [tabletIndicator, tabletIndicator2, tabletIndicator3]) {
+        if (!ind?.element) continue;
+        const arrow = ind.element.querySelector('.step-indicator__arrow');
+        if (!arrow) continue;
+        const towardWall = ind.element.classList.contains('step-indicator--toward-wall');
+        gsap.to(arrow, {
+            ...(towardWall ? { x: -12 } : { y: 10 }),
+            duration: 0.7,
+            ease: 'power1.inOut',
+            yoyo: true,
+            repeat: -1,
+        });
+    }
+}
 
 function setupCustomCursor() {
     const mq = window.matchMedia('(pointer: fine)');
@@ -213,6 +245,7 @@ function init() {
     setupDemoOverlay();
     setupInteractions();
     setupCustomCursor();
+    setupTabletIndicatorAnim();
     window.addEventListener('resize', onWindowResize);
     animate();
 }
@@ -418,6 +451,25 @@ function setupBooth() {
     tvQrCode.scale.set(0.0022, 0.0022, 0.0022);
     scene.add(tvQrCode);
 
+    const qrBadgeScale = 0.0022;
+    const qrPlaneHalfH = (TV_QR_WRAP_LAYOUT_H_PX * qrBadgeScale) / 2;
+    const qrBadgeAboveGap = 28 * qrBadgeScale;
+    const qrBadgeCircleHalf = (160 * qrBadgeScale) / 2;
+    const qrBadgeYOffset = qrPlaneHalfH + qrBadgeAboveGap + qrBadgeCircleHalf;
+
+    const qrTvBadgeEl = document.createElement('div');
+    qrTvBadgeEl.className = 'qr-wall-badge';
+    qrTvBadgeEl.innerHTML = '<div class="qr-wall-badge__circle">1</div>';
+    qrWallBadgeTv = new CSS3DObject(qrTvBadgeEl);
+    qrWallBadgeTv.scale.set(qrBadgeScale, qrBadgeScale, qrBadgeScale);
+    qrWallBadgeTv.rotation.copy(tvQrCode.rotation);
+    qrWallBadgeTv.position.set(
+        tvQrCode.position.x,
+        tvQrCode.position.y + qrBadgeYOffset,
+        tvQrCode.position.z,
+    );
+    scene.add(qrWallBadgeTv);
+
     // Tablet Table — same material as booth walls
     const tabletTable = new THREE.Mesh(
         new RoundedBoxGeometry(5.5, 0.2, 2.5, 4, 0.05),
@@ -453,11 +505,15 @@ function setupBooth() {
                 envMapIntensity: 0.48,
             }),
     );
-    for (let row = 0; row < 5; row++) {
-        for (let col = 0; col < 20; col++) {
+    for (let row = 0; row < INK_PATCH_WALL.rows; row++) {
+        for (let col = 0; col < INK_PATCH_WALL.cols; col++) {
             const mat = inkPatchMats[Math.floor(Math.random() * inkPatchMats.length)];
             const patch = new THREE.Mesh(new THREE.BoxGeometry(0.05, patchSize, patchSize), mat);
-            patch.position.set(-BOOTH_WIDTH / 2 + 0.28, 2.4 + row * 0.5, -5 + col * 0.5);
+            patch.position.set(
+                INK_PATCH_WALL.x,
+                INK_PATCH_WALL.y0 + row * INK_PATCH_WALL.pitchY,
+                INK_PATCH_WALL.z0 + col * INK_PATCH_WALL.pitchZ,
+            );
             patch.castShadow = true;
             scene.add(patch);
         }
@@ -467,6 +523,55 @@ function setupBooth() {
     tabletB = createTablet(TABLET_B_POS, "B");
     scene.add(tabletA);
     scene.add(tabletB);
+
+    // --- Step indicator above tablet A ---
+    const indEl = document.createElement('div');
+    indEl.className = 'step-indicator';
+    indEl.innerHTML =
+        '<div class="step-indicator__num">1</div>' +
+        '<div class="step-indicator__arrow">▼</div>' +
+        '<div class="step-indicator__label">Start here</div>';
+    tabletIndicator = new CSS3DObject(indEl);
+    tabletIndicator.scale.setScalar(0.0055);
+    tabletIndicator.position.set(
+        TABLET_A_POS.x,
+        TABLET_A_POS.y + 1.35,
+        TABLET_A_POS.z,
+    );
+    scene.add(tabletIndicator);
+
+    const inkGridMidY =
+        INK_PATCH_WALL.y0 + ((INK_PATCH_WALL.rows - 1) / 2) * INK_PATCH_WALL.pitchY;
+    const inkGridMidZ =
+        INK_PATCH_WALL.z0 + ((INK_PATCH_WALL.cols - 1) / 2) * INK_PATCH_WALL.pitchZ;
+    /** Nudge into the booth (+X) so the sign sits in front of the patch wall and the arrow reads toward it. */
+    const inkGridIndicatorOffsetX = 1.35;
+
+    const ind2El = document.createElement('div');
+    ind2El.className = 'step-indicator step-indicator--toward-wall';
+    ind2El.innerHTML =
+        '<div class="step-indicator__num">2</div>' +
+        '<div class="step-indicator__arrow" aria-hidden="true">◀</div>' +
+        '<div class="step-indicator__label">Booth oracle</div>';
+    tabletIndicator2 = new CSS3DObject(ind2El);
+    tabletIndicator2.scale.setScalar(0.0055);
+    tabletIndicator2.position.set(
+        INK_PATCH_WALL.x + inkGridIndicatorOffsetX,
+        inkGridMidY + 1.12,
+        inkGridMidZ,
+    );
+    scene.add(tabletIndicator2);
+
+    const ind3El = document.createElement('div');
+    ind3El.className = 'step-indicator';
+    ind3El.innerHTML =
+        '<div class="step-indicator__num">3</div>' +
+        '<div class="step-indicator__arrow">▼</div>' +
+        '<div class="step-indicator__label">magical reveal</div>';
+    tabletIndicator3 = new CSS3DObject(ind3El);
+    tabletIndicator3.scale.setScalar(0.0055);
+    tabletIndicator3.position.set(LOOK_TABLE.x, COLLAB_TABLE_CLOTH_H + 1.5, LOOK_TABLE.z);
+    scene.add(tabletIndicator3);
 
     const qrBEl = document.createElement('div');
     qrBEl.className = 'tv-qr-wrap tablet-interactive';
@@ -483,6 +588,18 @@ function setupBooth() {
     const preferredX = TABLET_B_POS.x + 0.95;
     tabletBQr.position.set(Math.min(maxCenterX, preferredX), 6.42, -BOOTH_DEPTH / 2 + 0.26);
     scene.add(tabletBQr);
+
+    const qrBackBadgeEl = document.createElement('div');
+    qrBackBadgeEl.className = 'qr-wall-badge';
+    qrBackBadgeEl.innerHTML = '<div class="qr-wall-badge__circle">1</div>';
+    qrWallBadgeBack = new CSS3DObject(qrBackBadgeEl);
+    qrWallBadgeBack.scale.set(qrBackScale, qrBackScale, qrBackScale);
+    qrWallBadgeBack.position.set(
+        tabletBQr.position.x,
+        tabletBQr.position.y + qrBadgeYOffset,
+        tabletBQr.position.z,
+    );
+    scene.add(qrWallBadgeBack);
 }
 
 function createInteractiveTable() {
@@ -1066,9 +1183,11 @@ function setupInteractions() {
 
 function updateOcclusion() {
     const isBehind = camera.position.z < -6.1 || camera.position.x < -6.1;
-    [wallLogo, tabletA, tabletB, tvScreen, tvQrCode, tabletBQr].forEach(obj => {
-        if (obj && obj.element) obj.element.style.visibility = isBehind ? 'hidden' : 'visible';
-    });
+    [wallLogo, tabletA, tabletB, tvScreen, tvQrCode, tabletBQr, qrWallBadgeTv, qrWallBadgeBack, tabletIndicator, tabletIndicator2, tabletIndicator3].forEach(
+        (obj) => {
+            if (obj && obj.element) obj.element.style.visibility = isBehind ? 'hidden' : 'visible';
+        },
+    );
 }
 
 function animate() {

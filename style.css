@@ -416,6 +416,72 @@ body {
     display: block;
 }
 
+/* Wall-only “1” badge above QR codes (circle only; same scale/rotation as parent QR CSS3DObject) */
+.qr-wall-badge {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    user-select: none;
+}
+
+.qr-wall-badge__circle {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: #ce0058;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 88px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ---- Step indicator (above tablet A) ---- */
+.step-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 260px;
+    pointer-events: none;
+    user-select: none;
+}
+
+.step-indicator__num {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: #ce0058;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 48px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.step-indicator__arrow {
+    font-size: 92px;
+    line-height: 1;
+    color: #ce0058;
+    display: block;
+}
+
+.step-indicator__label {
+    font-family: var(--font-sans);
+    font-size: 45px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #2a2a2e;
+    text-align: center;
+    white-space: nowrap;
+}
+
 .wall-logo { color: #CE0058; text-align: center; line-height: 1.1; display: flex; flex-direction: column; align-items: center; }
 .logo-main {
     font-family: 'Nighty', var(--font-sans);
