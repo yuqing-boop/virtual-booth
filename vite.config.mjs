@@ -34,5 +34,14 @@ export default defineConfig({
         emptyOutDir: true,
         assetsDir: 'assets',
         sourcemap: false,
+        chunkSizeWarningLimit: 1000,
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules/three')) return 'three';
+                    if (id.includes('node_modules/gsap')) return 'gsap';
+                },
+            },
+        },
     },
 });
