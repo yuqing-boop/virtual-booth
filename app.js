@@ -24,7 +24,12 @@ const TABLET_B_POS = new THREE.Vector3(4.0, TABLET_TABLE_HEIGHT + 0.6, -4.8);
 const TABLET_UI_PX = { w: 1200, h: 800 };
 /** 3D bezel frame around the plane (world units), 3:2 to match TABLET_UI_PX */
 const TABLET_FRAME = { w: 1.56, h: 1.04, d: 0.052 };
-const CAM_HOME = new THREE.Vector3(12, 10, 15);
+/**
+ * Default booth orbit (world units ≈ feet). Eye-level “flat” framing: camera and look-at share ~the same Y
+ * so the view is across the space, not bird’s-eye. Used on load, Explore Space, and exiting tablet/card/QR/demo.
+ */
+const BOOTH_ORBIT_TARGET = new THREE.Vector3(0, 5.6, 0);
+const CAM_HOME = new THREE.Vector3(11.5, 5.6, 16.8);
 const CAM_DEMO_OFFSET = new THREE.Vector3(0, 0.4, 1.1);
 /** Wall QR zoom: offset from look point into the booth (+X) with a slight Z nudge for framing. */
 const CAM_QR_OFFSET = new THREE.Vector3(2.5, 0.08, 0.14);
@@ -197,7 +202,8 @@ function init() {
     controls.maxDistance = 58;
     controls.minPolarAngle = 0.15;
     controls.maxPolarAngle = Math.PI / 2.05;
-    controls.target.set(0, 4, 0); 
+    controls.target.copy(BOOTH_ORBIT_TARGET);
+    controls.update();
 
     setupLights();
     setupBooth();
@@ -867,7 +873,13 @@ function exitQrZoom() {
     cssRenderer.domElement.style.pointerEvents = 'none';
 
     gsap.to(camera.position, { x: CAM_HOME.x, y: CAM_HOME.y, z: CAM_HOME.z, duration: 1.35, ease: 'power2.inOut' });
-    gsap.to(controls.target, { x: 0, y: 4, z: 0, duration: 1.35, ease: 'power2.inOut' });
+    gsap.to(controls.target, {
+        x: BOOTH_ORBIT_TARGET.x,
+        y: BOOTH_ORBIT_TARGET.y,
+        z: BOOTH_ORBIT_TARGET.z,
+        duration: 1.35,
+        ease: 'power2.inOut',
+    });
     updateNavButtons();
 }
 
@@ -928,7 +940,13 @@ function exitCardDemo() {
     cssRenderer.domElement.style.pointerEvents = 'none';
 
     gsap.to(camera.position, { x: CAM_HOME.x, y: CAM_HOME.y, z: CAM_HOME.z, duration: 1.35, ease: 'power2.inOut' });
-    gsap.to(controls.target, { x: 0, y: 4, z: 0, duration: 1.35, ease: 'power2.inOut' });
+    gsap.to(controls.target, {
+        x: BOOTH_ORBIT_TARGET.x,
+        y: BOOTH_ORBIT_TARGET.y,
+        z: BOOTH_ORBIT_TARGET.z,
+        duration: 1.35,
+        ease: 'power2.inOut',
+    });
     updateNavButtons();
 }
 
@@ -974,7 +992,7 @@ function setView(toDemo, targetGroup = null) {
     } else {
         hideDemoOverlay();
         targetPos.copy(CAM_HOME);
-        targetLook.set(0, 4, 0);
+        targetLook.copy(BOOTH_ORBIT_TARGET);
         renderer.domElement.style.pointerEvents = 'auto';
         cssRenderer.domElement.style.pointerEvents = 'none';
     }
