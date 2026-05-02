@@ -1,0 +1,25 @@
+# Dependencies — reinstalled by Vercel via `npm install`
+node_modules/
+
+# Vite build output — Vercel builds this from source
+dist/
+
+# Vite cache
+.vite/
+.cache/
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
