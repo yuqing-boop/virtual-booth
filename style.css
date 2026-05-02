@@ -1,0 +1,520 @@
+/* Neuzeit Grotesk (URW++) — local files from Neuzeit 2 bundle (e:\CURSOR\Neuzeit 2) */
+@font-face {
+    font-family: 'Neuzeit 2';
+    src: url('/fonts/neuzeit2/NeuzeitGro-Lig.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Neuzeit 2';
+    src: url('/fonts/neuzeit2/NeuzeitGro-Reg.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Neuzeit 2';
+    src: url('/fonts/neuzeit2/NeuzeitGro-Bol.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Neuzeit 2';
+    src: url('/fonts/neuzeit2/NeuzeitGro-Bla.otf') format('opentype');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* XP2149 复古趣味英文字体 — Nighty (from e:\CURSOR\XP2149 复古趣味英文字体) */
+@font-face {
+    font-family: 'Nighty';
+    src: url('/fonts/xp2149/Nighty.otf') format('opentype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    --primary: #CE0058;
+    --accent: #CE0058;
+    --text: #1d1d1f;
+    --font-sans: 'Neuzeit 2', system-ui, sans-serif;
+    --cursor-dot: #ce0058;
+    --cursor-dot-hover: #e29ded;
+}
+
+/* Fine pointer only — toggled from app.js */
+html.has-custom-cursor,
+html.has-custom-cursor body {
+    cursor: none !important;
+}
+
+html.has-custom-cursor body * {
+    cursor: none !important;
+}
+
+.custom-cursor {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--cursor-dot);
+    pointer-events: none;
+    z-index: 200000;
+    transform: translate(-50%, -50%);
+    opacity: 1;
+    transition:
+        background 0.14s ease,
+        transform 0.12s ease,
+        opacity 0.15s ease;
+    will-change: transform, opacity;
+}
+
+.custom-cursor.is-hover,
+.custom-cursor.is-pressing {
+    background: var(--cursor-dot-hover);
+}
+
+.custom-cursor.is-pressing {
+    transform: translate(-50%, -50%) scale(0.88);
+}
+
+.custom-cursor.is-hidden {
+    opacity: 0;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #dcccf0;
+    font-family: var(--font-sans);
+}
+
+#container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: #dcccf0;
+}
+
+/* WebGL receives drags/wheel for OrbitControls; gaps “fall through” the CSS3D overlay. */
+#webgl-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 1;
+    pointer-events: auto;
+}
+
+/* Root passes pointer events through so the canvas can orbit/pan/zoom; tablets/TV opt in below. */
+#css3d-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.css3d-noninteractive {
+    pointer-events: none !important;
+}
+
+.tablet-interactive {
+    pointer-events: auto !important;
+}
+
+.tablet-container .tablet-screen-thumb {
+    display: block;
+    pointer-events: auto;
+    transform: translateZ(0);
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    object-position: center top;
+    user-select: none;
+}
+
+.ui-layer {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: min(96vw, 720px);
+    gap: 15px;
+    z-index: 100;
+}
+
+/* Card demo: zoom + flower card + ink (2D overlay) */
+.card-demo-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 140;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px 100px;
+    box-sizing: border-box;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.card-demo-overlay--visible {
+    pointer-events: auto;
+    opacity: 1;
+    visibility: visible;
+}
+
+.card-demo-overlay__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(30, 22, 38, 0.35);
+    backdrop-filter: blur(6px);
+}
+
+.card-demo-overlay__panel {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    max-width: min(92vw, 520px);
+}
+
+.card-demo-overlay__stage {
+    position: relative;
+    width: min(88vw, 400px);
+    aspect-ratio: 248.83 / 257.28;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.35))
+        drop-shadow(0 8px 20px rgba(0, 0, 0, 0.22));
+}
+
+.card-demo-overlay__flower {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 0;
+    pointer-events: none;
+    opacity: 0.98;
+}
+
+#card-drip-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+    touch-action: none;
+    background: transparent;
+}
+
+.card-demo-overlay__hint {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.82);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+    text-align: center;
+    max-width: 420px;
+}
+
+#card-ink-ui {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+#card-ink-ui .card-ink-swatch {
+    width: 40px;
+    height: 40px;
+    border-radius: 0;
+    cursor: pointer;
+    border: 0px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+
+#card-ink-ui .card-ink-swatch:hover {
+    transform: scale(1.08);
+}
+
+#card-ink-ui .card-ink-swatch--active {
+    transform: scale(1.12);
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+}
+
+.card-demo-overlay__close {
+    margin-top: 4px;
+    padding: 12px 28px;
+    border-radius: 0;
+    border: none;
+    background: rgba(255, 255, 255, 0.95);
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #444;
+    cursor: pointer;
+    box-shadow: none;
+}
+
+.card-demo-overlay__close:hover {
+    background: #fff;
+    color: var(--primary);
+}
+
+.btn {
+    background: #ffc9c9d9;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: none;
+    padding: 14px 28px;
+    border-radius: 0;
+    cursor: pointer;
+    font-weight: 500;
+    color: #444444;
+    box-shadow: none;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 11px;
+}
+
+.btn:hover { 
+    transform: translateY(-3px); 
+    box-shadow: none;
+    background: rgb(255, 106, 143);
+}
+
+.btn-active { 
+    background: var(--primary); 
+    color: rgb(255, 255, 255); 
+    box-shadow: none;
+}
+
+#label { position: fixed; top: 40px; left: 40px; color: #1d1d1f; z-index: 10; pointer-events: none; }
+#label p { margin: 0; font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 3px; font-weight: 500; }
+
+/* 1200×800 3:2 — pairs with TABLET_UI_PX + TABLET_FRAME in app.js */
+.tablet-container {
+    box-sizing: border-box;
+    width: 1200px;
+    height: 800px;
+    border-radius: 20px;
+    border: 14px solid #161616;
+    background: #161616;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 56px rgba(0, 0, 0, 0.38);
+}
+
+.tablet-header {
+    flex-shrink: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #242428;
+    color: #a8a8ae;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #35353a;
+}
+
+.tv-container {
+    width: 1280px; height: 720px; background: #000; border: 22px solid #1a1a1a;
+    border-radius: 12px; overflow: hidden; box-shadow: 0 50px 120px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+}
+
+.tv-video-placeholder { 
+    width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; 
+    align-items: center; justify-content: center; color: #555; font-size: 44px; 
+    font-weight: 800; text-transform: uppercase; letter-spacing: 12px; 
+}
+
+.tv-qr-wrap {
+    width: 640px;
+    box-sizing: border-box;
+    padding: 0;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    cursor: pointer;
+}
+
+.tv-qr-img {
+    width: 520px;
+    height: 520px;
+    object-fit: contain;
+    display: block;
+}
+
+.tv-qr-caption {
+    margin: 0;
+    max-width: 100%;
+    font-family: var(--font-sans);
+    font-size: 40px;
+    font-weight: 400;
+    color: #ce0058;
+    text-align: center;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.25;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.12em;
+}
+
+.tv-qr-caption span {
+    display: block;
+}
+
+.wall-logo { color: #CE0058; text-align: center; line-height: 1.1; display: flex; flex-direction: column; align-items: center; }
+.logo-main {
+    font-family: 'Nighty', var(--font-sans);
+    font-weight: 400;
+    font-size: 120px;
+    letter-spacing: 6px;
+    margin-bottom: 12px;
+}
+.logo-sub { font-weight: 200; font-size: 50px; letter-spacing: 4px; opacity: 0.9; text-transform: uppercase; }
+
+/* Demo overlay: 2D iframe (reliable clicks) in a framed tablet shell, 2224×1668 (landscape) screen */
+.demo-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 115;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.demo-overlay--hidden {
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
+}
+
+.demo-overlay:not(.demo-overlay--hidden) {
+    pointer-events: auto;
+    visibility: visible;
+    opacity: 1;
+}
+
+.demo-overlay__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.demo-overlay__tablet {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    width: fit-content;
+    max-width: calc(100vw - 48px);
+    padding: clamp(20px, 2.9vmin, 34px);
+    background: #111;
+    border-radius: clamp(28px, 4vmin, 40px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 44px 110px rgba(0, 0, 0, 0.48),
+        0 16px 44px rgba(0, 0, 0, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.demo-overlay__screen {
+    position: relative;
+    display: block;
+    width: min(1280px, calc(94vw - 64px), calc((100vh - 140px) * 2224 / 1668));
+    max-width: 100%;
+    aspect-ratio: 2224 / 1668;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.demo-overlay__close {
+    position: absolute;
+    top: clamp(10px, 2vmin, 16px);
+    right: clamp(10px, 2vmin, 16px);
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.92);
+    color: #1d1d1f;
+    font-size: 24px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+}
+
+.demo-overlay__close:hover {
+    background: white;
+}
+
+.demo-overlay__iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+}

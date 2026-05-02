@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Gallery Booth | ART ORACLE</title>
+    
+    <!-- Link to your local CSS file -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- 
+      VITE NOTE: 
+      We do NOT put Three.js or GSAP <script> tags here anymore.
+      They are automatically bundled by Vite because of the 'import' 
+      statements at the top of your app.js.
+    -->
+</head>
+<body>
+    <div id="custom-cursor" class="custom-cursor" aria-hidden="true"></div>
+
+    <div id="container">
+        <!-- Floating Label (Top Left) -->
+        <div id="label">
+            <p>11.8' x 12' Virtual Booth</p>
+        </div>
+
+        <!-- UI Navigation (Bottom Center) -->
+        <div class="ui-layer">
+            <button type="button" id="viewBooth" class="btn btn-active">Explore Space</button>
+            <button type="button" id="viewDemo" class="btn">View Demo</button>
+            <button type="button" id="viewCardDemo" class="btn">Card demo</button>
+        </div>
+    </div>
+
+    <!-- The Javascript 'Brain' of the project -->
+    <!-- 'type="module"' is required for Vite to resolve your library imports -->
+    <script type="module" src="/app.js"></script>
+</body>
+</html>
