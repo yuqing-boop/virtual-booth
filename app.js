@@ -42,8 +42,35 @@ const LOOK_TABLE = new THREE.Vector3(1.0, COLLAB_TABLE_CLOTH_H - 0.02, 2.5);
 const DEMO_URL = "https://aff-demo-oracle.vercel.app/";
 /** Static preview on 3D tablets — `public/oracle-thumbnail.png`. */
 const TABLET_THUMB_SRC = '/oracle-thumbnail.png';
+/** Wall TV — `public/demo-video.webm` */
+const TV_DEMO_VIDEO_SRC = '/demo-video.webm';
+/** Bezel width in CSS px — must match `.tv-container` border in style.css */
+const TV_BEZEL_PX = 22;
+/** CSS layout pixels → world units for the wall TV (entire frame scales with video dimensions). */
+const TV_CSS3D_PX_TO_WORLD = 0.0055;
+/** Former gap from TV bottom to QR center — kept to preserve locked QR Y when TV moved. */
+const TV_QR_BELOW_GAP = 0.32;
+/** World-space gap from top of ink patches to bottom of TV frame (side wall). */
+const TV_ABOVE_INK_GRID_GAP = 0.56;
+/** TV center Y when side-wall QR world position was fixed (QR stack no longer follows the TV). */
+const TV_SIDE_QR_LOCK_REFERENCE_CENTER_Y = 9.35;
 /** Approx total height of `.tv-qr-wrap` in px (520 image + gap + two caption lines); used to stack wall badges above QR planes. */
 const TV_QR_WRAP_LAYOUT_H_PX = 520 + 18 + 110;
+/** Default video frame (1280×720 + bezel) for locked side-wall QR placement. */
+const TV_DEFAULT_OUTER_W_PX = 1280 + 2 * TV_BEZEL_PX;
+const TV_DEFAULT_OUTER_H_PX = 720 + 2 * TV_BEZEL_PX;
+const TV_SIDE_QR_SCALE = 0.0022;
+/** Fixed world position of side-wall QR + caption (decoupled from TV). */
+const TV_SIDE_QR_STACK_CENTER_Y =
+    TV_SIDE_QR_LOCK_REFERENCE_CENTER_Y -
+    (TV_DEFAULT_OUTER_H_PX * TV_CSS3D_PX_TO_WORLD) / 2 -
+    TV_QR_BELOW_GAP -
+    (TV_QR_WRAP_LAYOUT_H_PX * TV_SIDE_QR_SCALE) / 2;
+const TV_SIDE_QR_STACK_Z =
+    -0.5 +
+    (TV_DEFAULT_OUTER_W_PX * TV_CSS3D_PX_TO_WORLD) / 2 +
+    1.35 +
+    (640 * TV_SIDE_QR_SCALE) / 2;
 
 const INK_SWATCHES = ['#CE0058', '#DBE825', '#68D2AD', '#516B38', '#B869D8'];
 /** 5×20 ink tiles on the left wall (100 patches). Must match the `setupBooth` loop that builds them. */
@@ -55,6 +82,7 @@ const INK_PATCH_WALL = {
     z0: -5,
     pitchY: 0.5,
     pitchZ: 0.5,
+    patchSize: 0.39,
 };
 
 const CARD_DRIP_VERTEX_N = 36;
@@ -427,31 +455,21 @@ function setupBooth() {
     wallLogo.scale.set(0.012, 0.012, 0.012);
     scene.add(wallLogo);
 
-    // TV Screen
+    // TV + beside-TV QR + badge: layout driven by video intrinsic size (world scale ∝ pixel size)
     const tvEl = document.createElement('div');
     tvEl.className = 'tv-container tablet-interactive';
-    tvEl.innerHTML = `<div class="tv-video-placeholder"><p>VIDEO FEED</p></div>`;
+    tvEl.innerHTML = `<video class="tv-video" src="${TV_DEMO_VIDEO_SRC}" playsinline muted loop autoplay></video>`;
     tvScreen = new CSS3DObject(tvEl);
-    tvScreen.position.set(-BOOTH_WIDTH / 2 + 0.26, 7.2, -0.5);
     tvScreen.rotation.y = Math.PI / 2;
-    tvScreen.scale.set(0.0055, 0.0055, 0.0055);
-    scene.add(tvScreen);
 
     const qrEl = document.createElement('div');
     qrEl.className = 'tv-qr-wrap tablet-interactive';
     qrEl.innerHTML = qrCaptionInnerHTML();
     tvQrCode = new CSS3DObject(qrEl);
-    /** Beside TV: same wall (x); offset along z past the TV plane; keep in sync with .tv-qr-wrap width in style.css */
-    const tvHalfZ = (1280 * 0.0055) / 2;
-    const qrLayoutW = 640;
-    const qrHalfZ = (qrLayoutW * 0.0022) / 2;
-    const qrGap = 1.35;
-    tvQrCode.position.set(-BOOTH_WIDTH / 2 + 0.26, 6.45, -0.5 + tvHalfZ + qrGap + qrHalfZ);
     tvQrCode.rotation.y = Math.PI / 2;
-    tvQrCode.scale.set(0.0022, 0.0022, 0.0022);
-    scene.add(tvQrCode);
+    tvQrCode.scale.set(TV_SIDE_QR_SCALE, TV_SIDE_QR_SCALE, TV_SIDE_QR_SCALE);
 
-    const qrBadgeScale = 0.0022;
+    const qrBadgeScale = TV_SIDE_QR_SCALE;
     const qrPlaneHalfH = (TV_QR_WRAP_LAYOUT_H_PX * qrBadgeScale) / 2;
     const qrBadgeAboveGap = 28 * qrBadgeScale;
     const qrBadgeCircleHalf = (160 * qrBadgeScale) / 2;
@@ -463,12 +481,50 @@ function setupBooth() {
     qrWallBadgeTv = new CSS3DObject(qrTvBadgeEl);
     qrWallBadgeTv.scale.set(qrBadgeScale, qrBadgeScale, qrBadgeScale);
     qrWallBadgeTv.rotation.copy(tvQrCode.rotation);
+
+    const syncTvWallFromVideoSize = (contentW, contentH) => {
+        const w = Math.max(16, contentW);
+        const h = Math.max(16, contentH);
+        const outerW = w + 2 * TV_BEZEL_PX;
+        const outerH = h + 2 * TV_BEZEL_PX;
+        tvEl.style.width = `${outerW}px`;
+        tvEl.style.height = `${outerH}px`;
+        const k = TV_CSS3D_PX_TO_WORLD;
+        tvScreen.scale.set(k, k, k);
+        const tvHalfH = (outerH * k) / 2;
+        const inkTop =
+            INK_PATCH_WALL.y0 +
+            (INK_PATCH_WALL.rows - 1) * INK_PATCH_WALL.pitchY +
+            INK_PATCH_WALL.patchSize / 2;
+        tvScreen.position.set(
+            -BOOTH_WIDTH / 2 + 0.26,
+            inkTop + TV_ABOVE_INK_GRID_GAP + tvHalfH,
+            -0.5,
+        );
+    };
+    syncTvWallFromVideoSize(1280, 720);
+
+    tvQrCode.position.set(
+        -BOOTH_WIDTH / 2 + 0.26,
+        TV_SIDE_QR_STACK_CENTER_Y,
+        TV_SIDE_QR_STACK_Z,
+    );
     qrWallBadgeTv.position.set(
         tvQrCode.position.x,
         tvQrCode.position.y + qrBadgeYOffset,
         tvQrCode.position.z,
     );
+
+    scene.add(tvScreen);
+    scene.add(tvQrCode);
     scene.add(qrWallBadgeTv);
+    const tvVideoEl = tvEl.querySelector('.tv-video');
+    if (tvVideoEl) {
+        tvVideoEl.addEventListener('loadedmetadata', () => {
+            syncTvWallFromVideoSize(tvVideoEl.videoWidth, tvVideoEl.videoHeight);
+        });
+        void tvVideoEl.play().catch(() => {});
+    }
 
     // Tablet Table — same material as booth walls
     const tabletTable = new THREE.Mesh(
@@ -487,7 +543,6 @@ function setupBooth() {
         scene.add(leg);
     });
 
-    const patchSize = 0.39;
     const inkPatchDisplayColor = (hex) => {
         const c = new THREE.Color(hex);
         c.lerp(new THREE.Color(0xffffff), 0.18);
@@ -508,7 +563,10 @@ function setupBooth() {
     for (let row = 0; row < INK_PATCH_WALL.rows; row++) {
         for (let col = 0; col < INK_PATCH_WALL.cols; col++) {
             const mat = inkPatchMats[Math.floor(Math.random() * inkPatchMats.length)];
-            const patch = new THREE.Mesh(new THREE.BoxGeometry(0.05, patchSize, patchSize), mat);
+            const patch = new THREE.Mesh(
+                new THREE.BoxGeometry(0.05, INK_PATCH_WALL.patchSize, INK_PATCH_WALL.patchSize),
+                mat,
+            );
             patch.position.set(
                 INK_PATCH_WALL.x,
                 INK_PATCH_WALL.y0 + row * INK_PATCH_WALL.pitchY,

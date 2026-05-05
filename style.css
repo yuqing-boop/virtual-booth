@@ -382,16 +382,27 @@ body {
     border-bottom: 1px solid #35353a;
 }
 
+/* Wall TV: width/height set in JS from video intrinsic size (+ bezel). Fallback matches 1280×720. */
 .tv-container {
-    width: 1280px; height: 720px; background: #000; border: 22px solid #1a1a1a;
-    border-radius: 12px; overflow: hidden; box-shadow: 0 50px 120px rgba(0,0,0,0.5);
-    display: flex; align-items: center; justify-content: center;
+    box-sizing: border-box;
+    width: 1324px;
+    height: 764px;
+    background: #000;
+    border: 22px solid #1a1a1a;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 50px 120px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.tv-video-placeholder { 
-    width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; 
-    align-items: center; justify-content: center; color: #555; font-size: 44px; 
-    font-weight: 800; text-transform: uppercase; letter-spacing: 12px; 
+.tv-video {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    display: block;
+    pointer-events: none;
 }
 
 .tv-qr-wrap {
